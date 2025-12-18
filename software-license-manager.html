@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Software License Manager</title>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #f4f4f4;
+        margin: 0;
+        padding: 20px;
+    }
+    h1 {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    h2 {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    #searchBox {
+        width: 100%;
+        padding: 12px;
+        font-size: 16px;
+        margin-bottom: 20px;
+        border-radius: 6px;
+        border: 1px solid #aaa;
+    }
+    .entry {
+        background: white;
+        border-radius: 6px;
+        margin-bottom: 10px;
+        padding: 15px;
+        border-left: 5px solid #0078D7;
+    }
+    .entry-header {
+        display: flex;
+        justify-content: space-between;
+        cursor: pointer;
+        font-weight: bold;
+    }
+    .entry-content {
+        display: none;
+        margin-top: 10px;
+        white-space: pre-wrap;
+    }
+    .btn {
+        padding: 6px 12px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-left: 5px;
+    }
+    .btn-delete {
+        background: #d9534f;
+        color: white;
+    }
+    .btn-add {
+        background: #5cb85c;
+        color: white;
+        margin-bottom: 20px;
+    }
+</style>
+</head>
+<body>
+
+<h1>Software License Manager</h1>
+<h2>Contact: zonemaster60@gmail.com</h2>
+
+<input type="text" id="searchBox" placeholder="Search by product, company, or keyword...">
+
+<button class="btn btn-add" onclick="addEntry()">Add New Entry</button>
+
+<div id="entries">
+
+    <!-- Example Entry (You can duplicate this block for each license) -->
+    <div class="entry">
+        <div class="entry-header" onclick="toggleEntry(this)">
+            <span>Example Program codes</span>
+            <button class="btn btn-delete" onclick="deleteEntry(event, this)">Delete</button>
+        </div>
+        <div class="entry-content">
+            Your code(s) for Example Program:
+            9871-6542-3210-8912-2001
+            9882-7642-3221-8923-2002
+            Website: https://www.example.com/codes
+        </div>
+    </div>
+
+</div>
+
+<script>
+function saveData() {
+    const entries = [];
+    document.querySelectorAll(".entry").forEach(entry => {
+        const name = entry.querySelector(".entry-header span").innerText;
+        const details = entry.querySelector(".entry-content").innerHTML;
+        entries.push({ name, details });
+    });
+    localStorage.setItem("licenseData", JSON.stringify(entries));
+}
+
+function loadData() {
+    const saved = localStorage.getItem("licenseData");
+    if (!saved) return;
+
+    const entries = JSON.parse(saved);
+    const container = document.getElementById("entries");
+    container.innerHTML = "";
+
+    entries.forEach(e => {
+        const div = document.createElement("div");
+        div.className = "entry";
+        div.innerHTML = `
+            <div class="entry-header" onclick="toggleEntry(this)">
+                <span>${e.name}</span>
+                <button class="btn btn-delete" onclick="deleteEntry(event, this)">Delete</button>
+            </div>
+            <div class="entry-content">${e.details}</div>
+        `;
+        container.appendChild(div);
+    });
+}
+
+function toggleEntry(header) {
+    const content = header.nextElementSibling;
+    content.style.display = content.style.display === "block" ? "none" : "block";
+}
+
+function deleteEntry(event, btn) {
+    event.stopPropagation();
+    if (confirm("Delete this entry?")) {
+        btn.closest(".entry").remove();
+        saveData();
+    }
+}
+
+function addEntry() {
+    const name = prompt("Enter product name:");
+    if (!name) return;
+
+    const details = prompt("Enter product details:");
+    if (!details) return;
+
+    const container = document.getElementById("entries");
+
+    const div = document.createElement("div");
+    div.className = "entry";
+    div.innerHTML = `
+        <div class="entry-header" onclick="toggleEntry(this)">
+            <span>${name}</span>
+            <button class="btn btn-delete" onclick="deleteEntry(event, this)">Delete</button>
+        </div>
+        <div class="entry-content">${details.replace(/\n/g, "<br>")}</div>
+    `;
+
+    container.appendChild(div);
+    saveData();
+}
+
+document.getElementById("searchBox").addEventListener("input", function() {
+    const filter = this.value.toLowerCase();
+    const entries = document.querySelectorAll(".entry");
+
+    entries.forEach(entry => {
+        const text = entry.innerText.toLowerCase();
+        entry.style.display = text.includes(filter) ? "" : "none";
+    });
+});
+
+window.onload = loadData;
+</script>
+
+</body>
+</html>
