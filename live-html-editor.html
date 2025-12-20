@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Live HTML Editor v1.0.0.0</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- CodeMirror CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-darker.min.css">
+  <style>
+    :root {
+      --bg: #0f1419; --panel: #121820; --border: #1f2a36; --text: #e8eef7;
+      --muted: #9fb0c6; --accent: #4da3ff; --danger: #ff5577; --ok: #6cd67d;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; background: var(--bg); color: var(--text); }
+    .toolbar {
+      display: flex; gap: 8px; align-items: center; padding: 10px;
+      border-bottom: 1px solid var(--border); background: #0e1319;
+    }
+    .toolbar button, .toolbar label {
+      font: 13px/1.2 system-ui; color: var(--text); background: var(--panel);
+      border: 1px solid var(--border); padding: 6px 10px; border-radius: 6px; cursor: pointer;
+    }
+    .toolbar input[type="file"] { display: none; }
+    .status { margin-left: auto; font-size: 12px; color: var(--muted); }
+    .container { display: grid; grid-template-columns: 1fr 1fr; height: calc(100% - 52px); }
+    .pane { display: flex; flex-direction: column; border-right: 1px solid var(--border); }
+    .pane:last-child { border-right: none; }
+    .title { padding: 8px 10px; border-bottom: 1px solid var(--border);
+      font: 12px/1.2 system-ui; color: var(--muted); background: #0e1319; }
+    .searchbar {
+      display: grid; grid-template-columns: 1.2fr 1fr auto auto; gap: 6px; padding: 8px 10px;
+      border-bottom: 1px solid var(--border); background: #0e1319;
+    }
+    .searchbar input, .searchbar button {
+      font: 12px/1.2 system-ui; color: var(--text); background: var(--panel);
+      border: 1px solid var(--border); padding: 6px 8px; border-radius: 6px;
+    }
+    .CodeMirror { flex: 1; height: 100%; font-size: 14px; }
+    #preview { flex: 1; border: 0; background: #fff; }
+    .footer { border-top: 1px solid var(--border); padding: 6px 10px; font-size: 12px; color: var(--muted);
+      background: #0e1319; }
+    .badge { padding: 2px 6px; background: #173049; border: 1px solid var(--border); border-radius: 6px; }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <button id="newBtn">New</button>
+    <button id="downloadBtn">Download</button>
+    <label for="fileInput">Load</label>
+    <input id="fileInput" type="file" accept=".html,.htm,.txt" />
+    <button id="wrapBtn">Word wrap: Off</button>
+    <button id="formatBtn">Format</button>
+    <span class="badge">Autosave</span>
+    <span id="autosaveStatus" class="badge">Idle</span>
+    <div class="status" id="status">Ready</div>
+  </div>
+
+  <div class="container">
+    <div class="pane">
+      <div class="title">Editor</div>
+      <div class="searchbar">
+        <input id="findInput" placeholder="Find (Ctrl+F)" />
+        <input id="replaceInput" placeholder="Replace" />
+        <button id="findNextBtn">Find next</button>
+        <button id="replaceBtn">Replace</button>
+      </div>
+      <textarea id="editor"></textarea>
+      <div class="footer">Shortcuts: Ctrl+D (Download), Ctrl+L (Load), Ctrl+N (New), Ctrl+F (Find).</div>
+    </div>
+    <div class="pane">
+      <div class="title">Live preview</div>
+      <iframe id="preview"></iframe>
+      <div class="footer">Preview updates after ~250ms pause.</div>
+    </div>
+  </div>
+
+  <!-- CodeMirror JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/htmlmixed/htmlmixed.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/xml/xml.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/css/css.min.js"></script>
+
+  <script>
+    const preview = document.getElementById('preview');
+    const status = document.getElementById('status');
+    const autosaveStatus = document.getElementById('autosaveStatus');
+    const wrapBtn = document.getElementById('wrapBtn');
+    const newBtn = document.getElementById('newBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const fileInput = document.getElementById('fileInput');
+    const formatBtn = document.getElementById('formatBtn');
+    const findInput = document.getElementById('findInput');
+    const replaceInput = document.getElementById('replaceInput');
+    const findNextBtn = document.getElementById('findNextBtn');
+    const replaceBtn = document.getElementById('replaceBtn');
+
+    let typingTimer = null;
+    let wrapEnabled = false;
+    let lastFindIndex = 0;
+    const AUTOSAVE_KEY = 'html-editor-autosave';
+
+    // Initialize CodeMirror
+    const editor = CodeMirror.fromTextArea(document.getElementById('editor'), {
+      mode: "htmlmixed",
+      theme: "material-darker",
+      lineNumbers: true,
+      tabSize: 2,
+      indentUnit: 2,
+      lineWrapping: false
+    });
+
+    const DEFAULT_HTML = `<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Syntax Highlighted Editor</title>
+    <style>body { font-family: sans-serif; margin: 2rem; }</style>
+  </head>
+  <body>
+    <h1>Hello world!</h1>
+    <p>Edit HTML on the left, see preview on the right.</p>
+  </body>
+</html>`;
+    editor.setValue(localStorage.getItem(AUTOSAVE_KEY) || DEFAULT_HTML);
+
+    function schedulePreviewUpdate() {
+      clearTimeout(typingTimer);
+      typingTimer = setTimeout(updatePreview, 250);
+      autosaveStatus.textContent = 'Pending...';
+    }
+    function updatePreview() {
+      preview.srcdoc = editor.getValue();
+      status.textContent = 'Preview updated';
+      autosaveStatus.textContent = 'Saved';
+      try { localStorage.setItem(AUTOSAVE_KEY, editor.getValue()); } catch (e) {}
+    }
+
+    editor.on("change", schedulePreviewUpdate);
+    updatePreview();
+
+    // Download
+    downloadBtn.addEventListener("click", () => {
+      const blob = new Blob([editor.getValue()], { type: "text/html" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = "document.html"; a.click();
+      URL.revokeObjectURL(url);
+      status.textContent = 'Downloaded document.html';
+    });
+
+    // New
+    newBtn.addEventListener("click", () => {
+      editor.setValue(DEFAULT_HTML);
+      updatePreview();
+      status.textContent = 'New document created';
+    });
+
+    // Load
+    fileInput.addEventListener("change", async () => {
+      const file = fileInput.files[0];
+      if (!file) return;
+      const text = await file.text();
+      editor.setValue(text);
+      updatePreview();
+      status.textContent = `Loaded: ${file.name}`;
+    });
+
+    // Word wrap toggle
+    wrapBtn.addEventListener("click", () => {
+      wrapEnabled = !wrapEnabled;
+      editor.setOption("lineWrapping", wrapEnabled);
+      wrapBtn.textContent = wrapEnabled ? "Word wrap: On" : "Word wrap: Off";
+    });
+
+    // Format (simple indentation)
+    formatBtn.addEventListener("click", () => {
+      const src = editor.getValue();
+      const lines = src.replace(/\r\n/g, "\n").split("\n");
+      let depth = 0;
+      const formatted = lines.map(line => {
+        const trimmed = line.trim();
+        if (!trimmed) return "";
+        const dec = /^<\/[^>]+>/.test(trimmed) ? 1 : 0;
+        const indent = Math.max(0, depth - dec);
+        const out = "  ".repeat(indent) + trimmed;
+        const openTags = (trimmed.match(/<[^!/][^>]*>/g) || [])
+          .filter(t => !/\/\s*>$/.test(t) && !/^<\?/.test(t) && !/^<!/.test(t));
+        const closeTags = (trimmed.match(/<\/[^>]+>/g) || []);
+        depth += openTags.length - closeTags.length;
+        if (depth < 0) depth = 0;
+        return out;
+      });
+      editor.setValue(formatted.join("\n"));
+      updatePreview();
+      status.textContent = "Formatted";
+    });
+
+    // Find/Replace
+    function findNext() {
+      const q = findInput.value;
+      if (!q) return;
+      const text = editor.getValue();
+      const idx = text.indexOf(q, lastFindIndex);
+      if (idx === -1) { lastFindIndex = 0; status.textContent = "Not found"; return; }
+      lastFindIndex = idx + q.length;
+      editor.focus();
+      editor.setSelection({anchor: editor.posFromIndex(idx), head: editor.posFromIndex(idx + q.length)});
+      status.textContent = `Found at ${idx}`;
+    }
+    function replaceCurrent() {
+      const q = findInput.value;
+      const r = replaceInput.value ?? "";
+      if (!q) return;
+      const sel = editor.getSelection();
+      if (sel === q) {
+        editor.replaceSelection(r);
+        updatePreview();
+        status.textContent = "Replaced";
+      } else {
+        findNext();
+      }
+    }
+    findNextBtn.addEventListener("click", findNext);
+    replaceBtn.addEventListener("click", replaceCurrent);
+
+    // Keyboard shortcuts
+    window.addEventListener("keydown", (e) => {
+      if (e.ctrlKey && !e.shiftKey && !e.altKey) {
+        switch (e.key.toLowerCase()) {
+          case "d": e.preventDefault(); downloadBtn.click(); break;
+          case "l": e.preventDefault(); fileInput.click(); break;
+          case "n": e.preventDefault(); newBtn.click(); break;
+          case "f": e.preventDefault(); findInput.focus(); break;
+        }
+      }
+    });
+  </script>
+</body>
+</html>
