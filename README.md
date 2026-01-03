@@ -1,1 +1,1 @@
-Various scripts and examples.
+Various HTML scripts and examples.
