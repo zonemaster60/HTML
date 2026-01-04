@@ -4,6 +4,10 @@
   <meta charset="UTF-8" />
   <title>Live HTML Editor v1.0.0.0</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0f1419" />
+  <link rel="manifest" href="./live-html-editor.webmanifest" />
+  <link rel="icon" href="./live-html-editor-icon.svg" type="image/svg+xml" />
+  
   <!-- CodeMirror CSS -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-darker.min.css">
@@ -84,6 +88,13 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/css/css.min.js"></script>
 
   <script>
+    // PWA install (requires serving over http(s), not file://)
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./live-html-editor.sw.js").catch(() => {});
+      });
+    }
+
     const preview = document.getElementById('preview');
     const status = document.getElementById('status');
     const autosaveStatus = document.getElementById('autosaveStatus');

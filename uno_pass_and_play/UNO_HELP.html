@@ -1,0 +1,217 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>UNO Help / Rules</title>
+  <style>
+    :root{
+      --bg:#0b0f14;
+      --panel:#151c27;
+      --panel2:#101624;
+      --line:#334058;
+      --text:#e8eefc;
+      --muted:#b9c6e6;
+      --red:#e43b3b;
+      --green:#2ecc71;
+      --blue:#3498db;
+      --yellow:#f1c40f;
+    }
+    body {
+      font-family: system-ui, Segoe UI, Arial;
+      margin: 0;
+      line-height: 1.55;
+      color: var(--text);
+      background: radial-gradient(1200px 700px at 15% 2%, rgba(110,160,255,0.18) 0%, rgba(11,15,20,0) 55%),
+                  radial-gradient(900px 600px at 85% 0%, rgba(228,59,59,0.15) 0%, rgba(11,15,20,0) 55%),
+                  var(--bg);
+    }
+    .wrap{ max-width: 980px; margin: 0 auto; padding: 26px 22px 54px; }
+
+    .hero{
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 18px 18px;
+      background: linear-gradient(180deg, rgba(21,28,39,0.95), rgba(16,22,36,0.75));
+      box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+    }
+
+    h1{
+      margin: 0 0 8px;
+      font-size: 34px;
+      letter-spacing: 0.2px;
+    }
+    .sub{ color: var(--muted); margin: 0; }
+
+    h2 {
+      margin: 22px 0 10px;
+      font-size: 20px;
+      color: var(--text);
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    h2:before{
+      content:"";
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
+      background: linear-gradient(135deg, var(--blue), rgba(110,160,255,0.35));
+      box-shadow: 0 0 0 3px rgba(110,160,255,0.12);
+    }
+
+    .box {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px 16px;
+      background: rgba(21,28,39,0.85);
+    }
+
+    ul { margin: 8px 0 0; padding-left: 18px; }
+    li { margin: 6px 0; color: var(--muted); }
+    b{ color: var(--text); }
+
+    code {
+      background: rgba(232,238,252,0.08);
+      border: 1px solid rgba(232,238,252,0.14);
+      padding: 2px 6px;
+      border-radius: 6px;
+      color: var(--text);
+    }
+
+    .chips{ display:flex; gap:10px; flex-wrap:wrap; margin-top: 12px; }
+    .chip{ font-weight: 800; font-size: 12px; letter-spacing: 0.3px; text-transform: uppercase;
+      padding: 6px 10px; border-radius: 999px; border: 1px solid var(--line);
+      background: rgba(16,22,36,0.7); color: var(--muted);
+    }
+    .chip.red{ border-color: rgba(228,59,59,0.55); color: #ffd3d3; background: rgba(228,59,59,0.12); }
+    .chip.green{ border-color: rgba(46,204,113,0.55); color: #d9ffe9; background: rgba(46,204,113,0.12); }
+    .chip.blue{ border-color: rgba(52,152,219,0.55); color: #d3eeff; background: rgba(52,152,219,0.12); }
+    .chip.yellow{ border-color: rgba(241,196,15,0.55); color: #fff5c7; background: rgba(241,196,15,0.12); }
+
+    .note{ color: var(--muted); opacity: 0.95; }
+
+    a{ color: #9cc0ff; }
+    a:hover{ color: #cfe1ff; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <h1>UNO Rules (Reference + this HTML game)</h1>
+      <p class="sub">
+        A quick reference for how to play, plus the exact rules used by <code>uno_pass_and_play.html</code>.
+      </p>
+      <div class="chips">
+        <span class="chip red">Red</span>
+        <span class="chip green">Green</span>
+        <span class="chip blue">Blue</span>
+        <span class="chip yellow">Yellow</span>
+        <span class="chip">Wild</span>
+        <span class="chip">+2 / +4</span>
+        <span class="chip">Skip / Reverse</span>
+      </div>
+    </div>
+
+    <div style="height:16px"></div>
+
+    <div class="box note">
+      Tip: In the game, use the <code>HELP</code> button anytime.
+    </div>
+
+  <h2>1) Objective</h2>
+  <ul>
+    <li>Be the first player to get rid of all cards in your hand.</li>
+    <li>This HTML version is a single-round game (no scoring mode).</li>
+  </ul>
+
+  <h2>2) Card Types</h2>
+  <ul>
+    <li><b>Colors:</b> Red, Green, Blue, Yellow</li>
+    <li><b>Number cards:</b> 0–9</li>
+    <li><b>Action cards:</b> Skip, Reverse, Draw Two (+2)</li>
+    <li><b>Wild cards:</b> Wild, Wild Draw Four (+4)</li>
+  </ul>
+
+  <h2>3) Setup</h2>
+  <ul>
+    <li>Shuffle the deck.</li>
+    <li>Deal 7 cards to each player.</li>
+    <li>Flip 1 card to start the discard pile; the rest is the draw pile.</li>
+    <li>This HTML game ensures the starting discard is a number card.</li>
+  </ul>
+
+  <h2>4) Turn Structure</h2>
+  <ul>
+    <li>Play 1 card that matches the discard (by color or symbol), or play a Wild.</li>
+    <li>If you cannot play, draw 1 card.</li>
+    <li>If the drawn card is playable, you may play it immediately; otherwise your turn ends.</li>
+    <li><b>Active color</b> is normally the discard’s color; after a Wild, the player chooses it.</li>
+  </ul>
+
+  <h2>5) Matching Rules</h2>
+  <ul>
+    <li>Match <b>color</b>, or match <b>number/symbol</b>, or play a <b>Wild</b>.</li>
+    <li>If the top card is a Wild, the chosen active color is what you match.</li>
+  </ul>
+
+  <h2>6) Action & Wild Cards</h2>
+  <ul>
+    <li><b>Skip</b>: next player loses their turn.</li>
+    <li><b>Reverse</b>: reverses direction of play.</li>
+    <li><b>Draw Two</b>: next player draws 2 and loses their turn.</li>
+    <li><b>Wild</b>: choose next active color.</li>
+    <li><b>Wild Draw Four</b>: choose next color; next player draws 4 and loses their turn.</li>
+  </ul>
+
+  <h2>7) Wild +4 Restriction (enabled in this game)</h2>
+  <div class="box">
+    <p>
+      You may play <b>Wild Draw Four (+4)</b> only if you have <b>no card</b> in your hand matching the
+      current <b>active color</b> (color match restriction).
+    </p>
+    <p>
+      Physical UNO often allows challenges; this HTML game enforces the restriction directly (no challenge UI).
+    </p>
+  </div>
+
+  <h2>8) Calling “UNO” (enabled in this game)</h2>
+  <div class="box">
+    <ul>
+      <li>When you play down to exactly 1 card, you must call UNO.</li>
+      <li>This HTML game provides an <code>UNO!</code> button that becomes enabled.</li>
+      <li>You have 5 seconds to click it.</li>
+      <li>If you fail, you draw 2 cards as a penalty at the start of your next turn.</li>
+    </ul>
+  </div>
+
+  <h2>9) Winning</h2>
+  <ul>
+    <li>If you play your last card (hand becomes 0), you win immediately.</li>
+  </ul>
+
+  <h2>10) Common House Rules (not implemented here unless stated)</h2>
+  <ul>
+    <li><b>Stacking</b> (+2 on +2 etc.): not implemented in this HTML game.</li>
+    <li><b>Draw-until-playable</b>: varies; this HTML game generally uses single-draw then pass.</li>
+    <li><b>Jump-in</b> (play identical out of turn): not implemented.</li>
+    <li><b>7-0</b> (swap/rotate hands): not implemented.</li>
+  </ul>
+
+  <h2>11) How to play the included HTML pass-and-play version</h2>
+  <ul>
+    <li>Open <code>uno_pass_and_play.html</code> in a browser.</li>
+    <li>Choose <b>START 4P</b> for a normal game.</li>
+    <li>Choose <b>TUTORIAL 4P</b> for a guided demo scenario.</li>
+    <li>Click cards to play, click the deck or DRAW to draw, click PASS after drawing if needed.</li>
+    <li>When playing a Wild, pick a color on the color chooser overlay.</li>
+    <li>Between turns, the game shows a “Pass Device” screen for privacy.</li>
+  </ul>
+
+  <h2>Disclaimer</h2>
+  <div class="box note">
+    UNO is a trademarked game owned by its rights holders. This is a fan-made educational implementation.
+  </div>
+  </div>
+</body>
+</html>

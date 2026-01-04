@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#667eea">
+    <link rel="manifest" href="./link-manager.webmanifest">
+    <link rel="icon" href="./link-manager-icon.svg" type="image/svg+xml">
     <title>Link Manager</title>
     <style>
         * {
@@ -305,6 +308,15 @@
         document.getElementById('linkUrl').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') addOrUpdateLink();
         });
+
+        // Register service worker for offline support / installability.
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./link-manager-sw.js').catch(() => {
+                    // Best-effort; app should work without SW.
+                });
+            });
+        }
 
         renderLinks();
     </script>
